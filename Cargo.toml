@@ -1,0 +1,34 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+# Reference checkouts, not part of this build. `Pumpkin` carries its own
+# `Cargo.toml`, so without this cargo would try to fold it into the workspace.
+exclude = ["_ref"]
+
+[workspace.package]
+# The plugin reports this through `CARGO_PKG_VERSION`, so it has to track the
+# release tag. Keep the two in step when cutting a release.
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+authors = ["Rennex"]
+
+[workspace.dependencies]
+tracing = "0.1"
+
+# Target: public Pumpkin 0.2.1+26.3-26.51 (24 October 2026), not upstream HEAD.
+# ../Pumpkin-release must be commit 224f9f8144ca53a8d0800acb87607d714196e2a6.
+# v0.1 WIT tree: 5aeec84177a489e920a22532e5aff2b5f9279c1b.
+# A version string or WIT directory name alone does not guarantee ABI compatibility.
+[patch.crates-io]
+pumpkin-plugin-api = { path = "../Pumpkin-release/crates/pumpkin-plugin-api" }
+
+# A plugin is a component, not a native library, so the size of the artifact is
+# the thing worth trading build speed for.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

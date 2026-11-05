@@ -1,0 +1,18 @@
+[package]
+name = "worldedit-core"
+description = "The platform-independent WorldEdit engine: regions, patterns, masks, operations and history"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+# A library, so the engine's parsing and geometry can be tested on the host
+# target instead of only through a Wasm guest.
+crate-type = ["lib"]
+
+[dependencies]
+flate2 = "1.1.10"
+lz4_flex = { version = "0.14.0", default-features = false }
+tracing.workspace = true
