@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to release
+        required: true
+        type: string
+      publish_market:
+        description: Also upload this version to the Pumpkin Market
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worldedit-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: plugin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          path: plugin
+      - uses: actions/checkout@v4
+        with:
+          repository: Pumpkin-MC/Pumpkin
+          ref: 224f9f8144ca53a8d0800acb87607d714196e2a6
+          path: Pumpkin-release
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: plugin
+      - name: Validate release inputs
+        id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          PUBLISH_MARKET: ${{ inputs.publish_market }}
+          MARKET_API_TOKEN: ${{ secrets.MARKET_API_TOKEN }}
+        run: |
+          $version = $env:RELEASE_TAG -replace '^v', ''
+          $package = (cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages | Where-Object name -eq 'worldedit-pumpkin'
+          if ($env:RELEASE_TAG -ne "v$($package.version)" -or $version -ne $package.version) {
+            throw "Release tag must match the plugin package version"
+          }
+          if ($env:PUBLISH_MARKET -eq 'true' -and -not $env:MARKET_API_TOKEN) {
+            throw "Market publication requires an API token"
+          }
+          "value=$version" >> $env:GITHUB_OUTPUT
+      - run: cargo fetch --locked
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --offline --all-targets -- -D warnings
+      - run: cargo test --locked --offline
+      - run: cargo build --locked --offline --release --target wasm32-wasip3
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: plugin/target/wasm32-wasip3/release/worldedit_pumpkin.wasm
+          fail_on_unmatched_files: true
+          body: Rebuilt for wasm32-wasip3.
+      - name: Publish to Pumpkin Market
+        if: inputs.publish_market
+        uses: filiphsps/pumpkin-plugins/actions/publish-to-pumpkin-market@publish-to-pumpkin-market-v0.0.4
+        with:
+          plugin-id: oTpk3hmb
+          version: ${{ steps.version.outputs.value }}
+          wasm-file: plugin/target/wasm32-wasip3/release/worldedit_pumpkin.wasm
+          api-token: ${{ secrets.MARKET_API_TOKEN }}
+          track: stable
+          release-notes: Rebuilt for wasm32-wasip3.

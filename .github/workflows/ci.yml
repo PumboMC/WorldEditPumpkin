@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: plugin
+      - uses: actions/checkout@v4
+        with:
+          repository: Pumpkin-MC/Pumpkin
+          ref: 224f9f8144ca53a8d0800acb87607d714196e2a6
+          path: Pumpkin-release
+      - run: rustup show
+        working-directory: plugin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: plugin
+      - run: cargo fetch --locked
+        working-directory: plugin
+      - run: cargo fmt --check
+        working-directory: plugin
+      - run: cargo clippy --locked --offline --all-targets -- -D warnings
+        working-directory: plugin
+      - run: cargo test --locked --offline
+        working-directory: plugin
+      - run: cargo build --locked --offline --release --target wasm32-wasip3
+        working-directory: plugin

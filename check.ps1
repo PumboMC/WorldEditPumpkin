@@ -59,10 +59,10 @@ if ($Fast) {
 }
 else {
     Step "wasm" {
-        cargo build --release --target wasm32-wasip2 -p worldedit-pumpkin 2>&1 |
+        cargo build --release --target wasm32-wasip3 -p worldedit-pumpkin 2>&1 |
             Select-String -Pattern "error|warning"
     }
-    $wasm = Get-Item "target\wasm32-wasip2\release\worldedit_pumpkin.wasm" -ErrorAction SilentlyContinue
+    $wasm = Get-Item "target\wasm32-wasip3\release\worldedit_pumpkin.wasm" -ErrorAction SilentlyContinue
     if ($wasm) {
         Write-Host "artifact: $wasm ($([int]($wasm.Length / 1kb)) KB)" -ForegroundColor DarkGray
     }
