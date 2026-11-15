@@ -26,6 +26,9 @@ The command and brush selection is a subset of FastAsyncWorldEdit. Copy and past
 
 ```sh
 cargo test --workspace
-cargo build --locked --offline --release --target wasm32-wasip2 -p worldedit-pumpkin
+cargo build --locked --offline --release --target wasm32-wasip3 -p worldedit-pumpkin
 ```
+
+The Rust 1.100.0 toolchain and WASIp3 target are pinned in `rust-toolchain.toml`.
+The server must support WASIp3 as well as the pinned plugin WIT.
 

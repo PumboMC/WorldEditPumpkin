@@ -580,7 +580,6 @@ pub(crate) fn send(server: &Server, player: &str, message: &str) {
 ///
 /// A named helper so the `'static` and `Send` bounds the queue needs are stated once
 /// rather than rediscovered at each call site.
-#[must_use]
 pub fn walk(region: CuboidRegion) -> Box<dyn Iterator<Item = BlockPos> + Send + 'static> {
     Box::new(RegionWalker::new(region.boxed()))
 }
